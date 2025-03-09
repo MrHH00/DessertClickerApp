@@ -7,6 +7,11 @@ data class GameUiState(
     val currentDessertIndex: Int = 0,
     val dessertsSold: Int = 0,
     val revenue: Int = 0,
-    val currentDessertPrice: Int = dessertList[currentDessertIndex].price,
-    @DrawableRes val currentDessertImageId: Int = dessertList[currentDessertIndex].imageId
+    //left dessert
+    val DessertLeftPrice: Int = dessertList[currentDessertIndex].price,
+    @DrawableRes val leftCurrentDessertImageId: Int = dessertList[currentDessertIndex].imageId,
+    //right dessert
+    val DessertRightPrice: Int = dessertList[currentDessertIndex].price,
+    @DrawableRes val rightCurrentDessertImageId: Int = dessertList[currentDessertIndex].imageId,
+
 )

@@ -12,16 +12,30 @@ class GameViewModel: ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
-    fun onDessertClicked() {
+    fun onDessertLeftClicked() {
+        _uiState.update { cupcakeUiState ->
+            val dessertsSold = (cupcakeUiState.dessertsSold + 1).coerceAtLeast(0)
+            val prevDessertIndex = determineDessertIndex(dessertsSold)
+            cupcakeUiState.copy(
+                currentDessertIndex = prevDessertIndex,
+                revenue = (cupcakeUiState.revenue + cupcakeUiState.DessertLeftPrice).coerceAtLeast(0),
+                dessertsSold = dessertsSold,
+                leftCurrentDessertImageId = dessertList[prevDessertIndex].imageId,
+                DessertLeftPrice = dessertList[prevDessertIndex].price
+            )
+        }
+    }
+
+    fun onDessertRightClicked() {
         _uiState.update { cupcakeUiState ->
             val dessertsSold = cupcakeUiState.dessertsSold + 1
             val nextDessertIndex = determineDessertIndex(dessertsSold)
             cupcakeUiState.copy(
                 currentDessertIndex = nextDessertIndex,
-                revenue = cupcakeUiState.revenue + cupcakeUiState.currentDessertPrice,
+                revenue = cupcakeUiState.revenue + cupcakeUiState.DessertRightPrice,
                 dessertsSold = dessertsSold,
-                currentDessertImageId = dessertList[nextDessertIndex].imageId,
-                currentDessertPrice = dessertList[nextDessertIndex].price
+                rightCurrentDessertImageId = dessertList[nextDessertIndex].imageId,
+                DessertRightPrice = dessertList[nextDessertIndex].price
             )
         }
     }

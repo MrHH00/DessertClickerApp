@@ -36,6 +36,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -44,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.dessertclicker.R
 import com.example.dessertclicker.model.Dessert
@@ -52,28 +55,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dessertclicker.data.GameUiState
 import com.example.dessertclicker.ui.GameViewModel
 
-/**
- * Determine which dessert to show.
- */
-fun determineDessertToShow(
-    desserts: List<Dessert>,
-    dessertsSold: Int
-): Dessert {
-    var dessertToShow = desserts.first()
-    for (dessert in desserts) {
-        if (dessertsSold >= dessert.startProductionAmount) {
-            dessertToShow = dessert
-        } else {
-            // The list of desserts is sorted by startProductionAmount. As you sell more desserts,
-            // you'll start producing more expensive desserts as determined by startProductionAmount
-            // We know to break as soon as we see a dessert who's "startProductionAmount" is greater
-            // than the amount sold.
-            break
-        }
-    }
-
-    return dessertToShow
-}
 
 /**
  * Share desserts sold information using ACTION_SEND intent
@@ -108,7 +89,8 @@ fun DessertClickerApp(
     val uiState by viewModel.uiState.collectAsState()
     DessertClickerApp(
         gameUiState = uiState,
-        onDessertClicked = viewModel::onDessertClicked
+        onDessertLeftClicked = viewModel::onDessertLeftClicked,
+        onDessertRightClicked = viewModel::onDessertRightClicked,
     )
 }
 
@@ -116,7 +98,8 @@ fun DessertClickerApp(
 @Composable
 private fun DessertClickerApp(
     gameUiState: GameUiState,
-    onDessertClicked: () -> Unit,
+    onDessertLeftClicked: () -> Unit,
+    onDessertRightClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -146,8 +129,12 @@ private fun DessertClickerApp(
         DessertClickerScreen(
             revenue = gameUiState.revenue,
             dessertsSold = gameUiState.dessertsSold,
-            dessertImageId = gameUiState.currentDessertImageId,
-            onDessertClicked = onDessertClicked,
+            dessertImageLeftId = gameUiState.leftCurrentDessertImageId,
+            dessertImageRightId = gameUiState.rightCurrentDessertImageId,
+            onDessertLeftClicked = onDessertLeftClicked,
+            onDessertRightClicked = onDessertRightClicked,
+            DessertLeftPrice = gameUiState.DessertLeftPrice,
+            DessertRightPrice = gameUiState.DessertRightPrice,
             modifier = Modifier.padding(contentPadding)
         )
     }
@@ -186,8 +173,12 @@ private fun DessertClickerAppBar(
 fun DessertClickerScreen(
     revenue: Int,
     dessertsSold: Int,
-    @DrawableRes dessertImageId: Int,
-    onDessertClicked: () -> Unit,
+    dessertImageLeftId: Int,
+    dessertImageRightId: Int,
+    onDessertLeftClicked: () -> Unit,
+    onDessertRightClicked: () -> Unit,
+    DessertLeftPrice: Int,
+    DessertRightPrice: Int,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -202,16 +193,65 @@ fun DessertClickerScreen(
                     .weight(1f)
                     .fillMaxWidth(),
             ) {
-                Image(
-                    painter = painterResource(dessertImageId),
-                    contentDescription = null,
+                Row(
                     modifier = Modifier
-                        .width(dimensionResource(R.dimen.image_size))
-                        .height(dimensionResource(R.dimen.image_size))
-                        .align(Alignment.Center)
-                        .clickable { onDessertClicked() },
-                    contentScale = ContentScale.Crop,
-                )
+                        .fillMaxWidth()
+                        .align(Alignment.Center),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    //left
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(dessertImageLeftId),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .width(dimensionResource(R.dimen.image_size))
+                                .height(dimensionResource(R.dimen.image_size))
+                                .clickable { onDessertLeftClicked() },
+                            contentScale = ContentScale.Crop,
+                        )
+                        Text(
+                            text = "$${DessertLeftPrice}",
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .padding(8.dp)
+
+                        )
+                    }
+                    //right
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(dessertImageRightId),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .width(dimensionResource(R.dimen.image_size))
+                                .height(dimensionResource(R.dimen.image_size))
+                                .clickable { onDessertRightClicked() },
+                            contentScale = ContentScale.Crop,
+                        )
+                        Text(
+                            text = "$${DessertRightPrice}",
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                                .padding(8.dp)
+
+                        )
+                    }
+                }
             }
             TransactionInfo(
                 revenue = revenue,
@@ -289,7 +329,8 @@ fun MyDessertClickerAppPreview() {
     DessertClickerTheme {
         DessertClickerApp(
             gameUiState = GameUiState(),
-            onDessertClicked = {}
+            onDessertLeftClicked = {},
+            onDessertRightClicked = {}
         )
     }
 }
