@@ -1,7 +1,9 @@
 Dessert Clicker app
 =====================
 
-Code for Android Basics with Compose Codelab.
+Student Id: 22110028
+
+Student name: Nguyễn Mai Huy Hoàng
 
 Introduction
 ------------
